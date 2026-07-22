@@ -1,62 +1,47 @@
-'use client'
-
-import { Heading, Text, Stack, Label } from '@primer/react'
-import { MarkGithubIcon } from '@primer/octicons-react'
-import { ColorPalette } from '@/components/showcase/color-palette'
-import { TypeScale } from '@/components/showcase/type-scale'
-import { ComponentShowcase } from '@/components/showcase/component-showcase'
-import { CreateRepoCard } from '@/components/showcase/create-repo-card'
-
 export default function Page() {
   return (
     <main
       style={{
-        maxWidth: 960,
-        margin: '0 auto',
-        padding: '48px 24px 96px',
+        colorScheme: 'light dark',
+        position: 'relative',
+        display: 'flex',
+        minHeight: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'light-dark(#fff, #000)',
+        color: 'light-dark(#000, #fff)',
       }}
     >
-      <Stack direction="vertical" gap="spacious">
-        <Stack direction="vertical" gap="condensed">
-          <Stack direction="horizontal" gap="condensed" align="center">
-            <MarkGithubIcon size={32} />
-            <Label variant="accent">Design system</Label>
-          </Stack>
-          <Heading as="h1" variant="large">
-            Primer
-          </Heading>
-          <Text
-            size="large"
-            style={{ color: 'var(--fgColor-muted)', maxWidth: 560 }}
-          >
-            GitHub&apos;s design system — built with @primer/react,
-            @primer/octicons-react, and @primer/primitives design tokens. This
-            starter wires up the theme, tokens, and fonts so every screen
-            inherits the Primer look.
-          </Text>
-        </Stack>
-
-        <Divider />
-        <ColorPalette />
-        <Divider />
-        <TypeScale />
-        <Divider />
-        <ComponentShowcase />
-        <Divider />
-        <CreateRepoCard />
-      </Stack>
+      <svg
+        aria-hidden="true"
+        style={{ width: 80, height: 80 }}
+        width={80}
+        height={80}
+        fill="none"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        stroke="currentColor"
+        strokeWidth="0.5"
+      >
+        <path
+          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <p
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: 'calc(50% + 56px)',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          fontSize: '14px',
+          fontWeight: 500,
+          color: 'light-dark(#71717a, #a1a1aa)',
+        }}
+      >
+        Your v0 generation will show here.
+      </p>
     </main>
-  )
-}
-
-function Divider() {
-  return (
-    <hr
-      style={{
-        border: 'none',
-        borderTop: 'var(--borderWidth-thin) solid var(--borderColor-default)',
-        margin: 0,
-      }}
-    />
   )
 }
