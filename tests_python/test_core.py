@@ -95,6 +95,18 @@ def test_expiration_date_contract():
         expiration_date("2020-01-01")
 
 
+@pytest.mark.asyncio
+async def test_hashpay_create_order_contract(monkeypatch):
+    calls = []
+    async def request(self, method, path, payload=None):
+        calls.append((method, path, payload))
+        return {"data": {"orderId": "hp-1", "payUrl": "https://pay.example.com/order/hp-1"}}
+    monkeypatch.setattr(HashPay, "request", request)
+    result = await HashPay("https://hashpay.example.com", "merchant", "private-key").create({"merchantNo": "VP1", "amount": "19.99"})
+    assert result["data"]["payUrl"] == "https://pay.example.com/order/hp-1"
+    assert calls == [("POST", "/api/merchant/new", {"merchantNo": "VP1", "amount": "19.99"})]
+
+
 def test_hashpay_encrypted_callback():
     private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     pem = private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode()
