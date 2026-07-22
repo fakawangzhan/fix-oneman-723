@@ -1,10 +1,18 @@
+# IDC-ONEMAN
+
+This is a ONEMAN IDC project bootstrapped with python3.
+
+用本源码当ONEMAN前，请准备好你的CLICD源切鸡，以及HashPay收银台，我只是无聊的组装了一个相对容易的舞台
+
+本人不负责该源码引起的任何风险问题，谢谢理解！
+
 # IDC-ONEMAN 部署说明 
 
 演示DEMO:https://p02--vps--mgsq65kksm7q.code.run/
 
 ## 1. 服务器要求
 
-- Debian 11+/Ubuntu 20.04+，或 CentOS Stream/RHEL 8+
+- Debian 11+/Ubuntu 20.04+，或 CentOS Stream/RHEL 8+，Docker环境
 - 1 核 CPU、1 GB 内存、10 GB 可用磁盘起步
 - 已开放 TCP 9080；生产环境建议由 Nginx/Caddy 反代并启用 HTTPS
 - CLICD API Key / HashPay 商户
@@ -12,13 +20,13 @@
 ## 2. 一键安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/fakawangzhan/idc-oneman/main/install.sh | sudo sh
+curl -fsSL https://raw.githubusercontent.com/oneman-idc/idc-oneman-V5/main/install.sh | sudo sh
 ```
 
 中国大陆网络不稳定时：
 
 ```bash
-curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/fakawangzhan/idc-oneman/main/install.sh | sudo GITHUB_PROXY=https://ghfast.top USE_CN_MIRROR=1 sh
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/oneman-idc/idc-oneman-V5/main/install.sh | sudo GITHUB_PROXY=https://ghfast.top USE_CN_MIRROR=1 sh
 ```
 
 安装脚本自动识别 Debian/RHEL 系、安装 Docker、探测 GitHub、设置 PyPI 和 Docker Hub 国内镜像，并在 Git Clone 失败时回退到 tar.gz 源码包。离线或受限网络可将源码压缩包上传服务器，解压后在源码根目录执行 `sudo USE_CN_MIRROR=1 sh install.sh`。
@@ -29,7 +37,7 @@ curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/fakawangzhan/idc
 
 1. 打开 `http://服务器IP:9080/install`，创建首位管理员。
 2. 进入“系统配置”：
-   - 站点公开地址必须填写外部可访问的 HTTPS 地址。
+   - 站点公开地址必须填写外部可访问的 HTTPS 地址(自行配置反代)。
    - CLICD 面板地址与 API Key。
    - HashPay 地址、商户 ID、私钥和平台公钥。
    - SMTP Host、Port、加密方式、账号、授权码与发件地址。
@@ -67,4 +75,4 @@ docker compose start
 4. IDC-ONEMAN 添加销售套餐 管理用户。
 
 
-感谢开源代码 CLICD / HashPay / EdgeKey,大佬们有实力的请随意进行深度二开，JUST DO IT!人人皆是OneMan！
+感谢开源代码 CLICD / HashPay / EdgeKey / NodeSeek,大佬们有实力的请随意进行深度二开，JUST DO IT!人人皆是OneMan！
