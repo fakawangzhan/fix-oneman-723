@@ -399,23 +399,38 @@ async def create_order(request: Request, plan_id: int = Form(), csrf: str = Form
         raise HTTPException(404, "套餐不可购买")
     order_no = "VP" + datetime.utcnow().strftime("%Y%m%d%H%M%S") + secrets.token_hex(3).upper()
     order = Order(order_no=order_no, user_id=user["uid"], plan_id=plan.id, plan_snapshot=plan_snapshot(plan), amount_cents=plan.price_cents, currency=plan.currency)
-    db.add(order)
-    await db.commit()
-    await db.refresh(order)
     try:
+        db.add(order)
+        await db.commit()
+        await db.refresh(order)
         base, merchant, private_key = await get(db, "hashpay_base_url"), await get(db, "hashpay_merchant_id"), await get(db, "hashpay_private_key")
+        if not base or not merchant or not private_key:
+            raise ValueError("HashPay 配置不完整")
         public_url = await site_url(db)
         result = await HashPay(base, merchant, private_key).create({"merchantNo": order_no, "amount": f"{plan.price_cents / 100:.2f}", "currency": plan.currency, "description": plan.name, "notify_url": public_url + "/hashpay/callback", "return_url": public_url + "/dashboard"})
-        data = result.get("data") or result.get("order") or result
-        order.hashpay_id = str(data.get("id") or data.get("orderId") or "") or None
-        order.checkout_url = result.get("checkoutUrl") or data.get("checkoutUrl") or data.get("payUrl")
+        if not isinstance(result, dict):
+            raise ValueError("HashPay 返回格式错误")
+        nested = result.get("data") or result.get("order") or {}
+        data = nested if isinstance(nested, dict) else {}
+        order.hashpay_id = str(data.get("id") or data.get("orderId") or result.get("id") or result.get("orderId") or "") or None
+        order.checkout_url = result.get("checkoutUrl") or result.get("payUrl") or data.get("checkoutUrl") or data.get("payUrl")
+        if not order.checkout_url:
+            raise ValueError("HashPay 未返回支付链接")
         order.status = "payment_pending"
         await db.commit()
     except Exception as exc:
-        order.status = "payment_error"
-        await db.commit()
+        await db.rollback()
+        try:
+            persisted = await db.get(Order, order.id) if order.id else None
+            if persisted:
+                persisted.status = "payment_error"
+                await db.commit()
+        except Exception:
+            await db.rollback()
+            logger.exception("订单 %s 支付失败状态保存失败", order_no)
+        logger.exception("订单 %s 创建 HashPay 支付失败", order_no)
         raise HTTPException(502, f"支付订单创建失败：{exc}") from exc
-    return RedirectResponse(order.checkout_url or "/dashboard", 303)
+    return RedirectResponse(order.checkout_url, 303)
 
 
 @app.post("/hashpay/callback")
