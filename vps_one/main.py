@@ -18,7 +18,7 @@ from sqlalchemy import func, select
 
 from .config import settings
 from .database import SessionLocal, init_db, session, write_lock
-from .models import Audit, Instance, Job, Order, PaymentEvent, Plan, User
+from .models import Audit, CLICDNode, Instance, Job, Order, PaymentEvent, Plan, User
 from .security import csrf_token, decrypt, encrypt, hash_password, read_session, session_token, valid_csrf, verify_password
 from .services.clicd import CLICD, container_details, container_items, container_status, extract_access, plan_payload, unwrap_data
 from .services.hashpay import HashPay
@@ -74,6 +74,18 @@ async def site_url(db) -> str:
 
 def unwrap(result):
     return result.get("data", result) if isinstance(result, dict) else result
+
+
+async def clicd_node(db, node_id: int | None, active: bool = False) -> CLICDNode:
+    node = await db.get(CLICDNode, node_id) if node_id else None
+    if not node or (active and not node.active):
+        raise HTTPException(400, "CLICD 节点不存在或已停用")
+    return node
+
+
+async def clicd_client(db, node_id: int | None, active: bool = False) -> CLICD:
+    node = await clicd_node(db, node_id, active)
+    return CLICD(node.base_url, decrypt(node.token))
 
 
 def plan_snapshot(plan: Plan) -> str:
@@ -227,7 +239,8 @@ async def provision(db, order_id: int):
     plan = await db.get(Plan, order.plan_id)
     existing = (await db.execute(select(Instance).where(Instance.order_id == order.id))).scalar_one_or_none()
     expires = existing.expires_at if existing and existing.expires_at else datetime.utcnow() + timedelta(days=30 * plan.months)
-    client = CLICD(await get(db, "clicd_base_url"), await get(db, "clicd_token"))
+    node_id = existing.clicd_node_id if existing else plan.clicd_node_id
+    client = await clicd_client(db, node_id, active=not bool(existing))
     if existing and existing.clicd_id:
         status = await client.status(existing.clicd_id)
         if status != "running":
@@ -269,6 +282,7 @@ async def provision(db, order_id: int):
     if not credentials.get("username"):
         credentials = await client.create_sub_user(str(obj.get("name") or created.get("name") or resource_name))
     instance = existing or Instance(user_id=order.user_id, order_id=order.id, plan_id=plan.id, name=f"VPS-{order.order_no[-8:]}")
+    instance.clicd_node_id = node_id
     instance.clicd_id = instance_id
     instance.status = status
     instance.ip = details.get("ip", "")

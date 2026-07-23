@@ -18,6 +18,18 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class CLICDNode(Base):
+    __tablename__ = "clicd_nodes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    base_url: Mapped[str] = mapped_column(Text)
+    token: Mapped[str] = mapped_column(Text)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Plan(Base):
     __tablename__ = "plans"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -40,6 +52,7 @@ class Plan(Base):
     io_read_mbps: Mapped[int] = mapped_column(Integer, default=0)
     io_write_mbps: Mapped[int] = mapped_column(Integer, default=0)
     clicd_node: Mapped[str] = mapped_column(String(100), default="")
+    clicd_node_id: Mapped[int | None] = mapped_column(ForeignKey("clicd_nodes.id"), nullable=True, index=True)
     clicd_image: Mapped[str] = mapped_column(String(200), default="debian-bookworm")
     clicd_template_name: Mapped[str] = mapped_column(String(200), default="")
     clicd_validated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -77,7 +90,8 @@ class Instance(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), unique=True)
     plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id"))
-    clicd_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
+    clicd_node_id: Mapped[int | None] = mapped_column(ForeignKey("clicd_nodes.id"), nullable=True, index=True)
+    clicd_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     name: Mapped[str] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(30), default="provisioning", index=True)
     ip: Mapped[str] = mapped_column(String(100), default="")
