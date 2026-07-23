@@ -191,17 +191,15 @@ class CLICD:
         return reset_password_value(await self.request("POST", f"/containers/{instance_id}/reset-password", {"password": password}))
 
     async def templates(self, virtualization: str = ""):
-        if virtualization:
-            return await self.request("GET", "/images/enabled", params={"type": virtualization})
-
         host = unwrap_data(await self.host_info())
+        requested_types = [virtualization] if virtualization else ["lxc", "kvm"]
         available_types = [
-            item
-            for item in ("lxc", "kvm")
-            if isinstance(host, dict) and host.get(f"{item}_available") is True
+            image_type
+            for image_type in requested_types
+            if isinstance(host, dict) and host.get(f"{image_type}_available") is True
         ]
         if not available_types:
-            return await self.request("GET", "/images/enabled")
+            return {"data": []}
 
         images: list[dict[str, Any]] = []
         for image_type in available_types:
